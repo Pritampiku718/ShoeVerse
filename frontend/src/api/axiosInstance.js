@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Backend API Base URL
-const API_URL = "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 console.log("🌐 Connecting to backend at:", API_URL);
 
@@ -36,7 +36,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 /* =====================================
@@ -83,7 +83,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;
