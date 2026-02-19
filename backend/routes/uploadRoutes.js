@@ -26,8 +26,17 @@ const storage = new CloudinaryStorage({
     return {
       folder: "shoeverse-products",
 
-      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "avif"],
+      // ✅ Allow all important formats
+      allowed_formats: [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+        "gif",
+        "avif",
+      ],
 
+      // ✅ Unique filename
       public_id: `shoe-${Date.now()}-${Math.round(
         Math.random() * 1e9
       )}`,
@@ -76,7 +85,7 @@ router.post(
 
         file: {
           url: req.file.path, // ✅ Cloudinary URL
-          publicId: req.file.public_id, // ✅ Correct Cloudinary ID
+          publicId: req.file.filename, // ✅ Correct Public ID
           alt: req.file.originalname,
           isPrimary: true,
         },
@@ -108,9 +117,10 @@ router.post(
         });
       }
 
+      // ✅ FIXED: Always return publicId properly
       const files = req.files.map((file, index) => ({
         url: file.path, // ✅ Cloudinary URL
-        publicId: file.public_id, // ✅ Correct Cloudinary ID
+        publicId: file.filename, // ✅ FIXED (Required for Product Save)
         alt: file.originalname,
         isPrimary: index === 0,
       }));
@@ -147,7 +157,7 @@ router.delete(
         });
       }
 
-      // ✅ Delete from Cloudinary (Correct)
+      // ✅ Delete from Cloudinary
       const result = await cloudinary.uploader.destroy(publicId);
 
       if (result.result !== "ok") {

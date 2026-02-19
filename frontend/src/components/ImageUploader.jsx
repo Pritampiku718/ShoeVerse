@@ -6,8 +6,10 @@ import {
   FaImage,
   FaCheckCircle,
 } from "react-icons/fa";
+
 import axiosInstance from "../api/axiosInstance";
 import toast from "react-hot-toast";
+
 import "./ImageUploader.css";
 
 const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
@@ -15,7 +17,7 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
 
-  // Always store images as objects
+  // ✅ Always store images as objects
   const [images, setImages] = useState(existingImages);
 
   /* =====================================================
@@ -35,7 +37,7 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
       "image/png",
       "image/webp",
       "image/gif",
-      "image/avif"
+      "image/avif", // ✅ Added AVIF Support
     ];
 
     const invalidFiles = files.filter(
@@ -43,12 +45,13 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
     );
 
     if (invalidFiles.length > 0) {
-      setError("Only JPG, PNG, WebP, and GIF images are allowed");
-      toast.error("Only JPG, PNG, WebP, and GIF images are allowed");
+      setError("Only JPG, PNG, WebP, GIF, AVIF images are allowed");
+      toast.error("Only JPG, PNG, WebP, GIF, AVIF images are allowed");
       return;
     }
 
     const maxSize = 5 * 1024 * 1024;
+
     const oversizedFiles = files.filter((file) => file.size > maxSize);
 
     if (oversizedFiles.length > 0) {
@@ -88,8 +91,10 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
           onUploadProgress: (progressEvent) => {
             if (progressEvent.total) {
               const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
+                (progressEvent.loaded * 100) /
+                  progressEvent.total
               );
+
               setUploadProgress(percentCompleted);
             }
           },
@@ -99,15 +104,12 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
       console.log("Upload response:", data);
 
       /* ===============================
-         ✅ STORE IMAGES AS OBJECTS
+         ✅ STORE IMAGES PROPERLY
       =============================== */
       if (data && data.files) {
         const newImages = data.files.map((file, index) => ({
-          url: file.url, // Cloudinary URL
-
-          // ✅ FIXED: Correct Cloudinary Public ID
-          publicId: file.publicId,
-
+          url: file.url, // ✅ Cloudinary URL
+          publicId: file.publicId, // ✅ FIXED (Required for MongoDB)
           alt: files[index].name,
           isPrimary: images.length === 0 && index === 0,
         }));
@@ -116,12 +118,13 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
 
         setImages(updatedImages);
 
-        // Send back to parent
+        // Send to parent component
         onImageUpload(updatedImages);
 
-        toast.success(`${data.files.length} image(s) uploaded successfully`, {
-          id: "upload",
-        });
+        toast.success(
+          `${data.files.length} image(s) uploaded successfully`,
+          { id: "upload" }
+        );
       }
 
       setUploadProgress(100);
@@ -159,10 +162,14 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
       toast.loading("Removing image...", { id: "remove" });
 
       if (imageToRemove.publicId) {
-        await axiosInstance.delete(`/upload/${imageToRemove.publicId}`);
+        await axiosInstance.delete(
+          `/upload/${imageToRemove.publicId}`
+        );
       }
 
-      toast.success("Image removed successfully", { id: "remove" });
+      toast.success("Image removed successfully", {
+        id: "remove",
+      });
     } catch (error) {
       console.error("Error deleting image:", error);
       toast.error("Failed to remove image", { id: "remove" });
@@ -174,7 +181,10 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
     const updatedImages = images.filter((_, i) => i !== index);
 
     // Ensure one primary remains
-    if (updatedImages.length > 0 && !updatedImages.some((img) => img.isPrimary)) {
+    if (
+      updatedImages.length > 0 &&
+      !updatedImages.some((img) => img.isPrimary)
+    ) {
       updatedImages[0].isPrimary = true;
     }
 
@@ -285,9 +295,11 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
           ) : (
             <div className="upload-prompt">
               <FaCloudUploadAlt className="upload-icon" />
-              <span className="upload-text">Click to upload images</span>
+              <span className="upload-text">
+                Click to upload images
+              </span>
               <span className="upload-hint">
-                JPG, PNG, WebP, GIF up to 5MB
+                JPG, PNG, WebP, GIF, AVIF up to 5MB
               </span>
             </div>
           )}
