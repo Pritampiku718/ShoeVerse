@@ -86,6 +86,11 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+app.get("/", (req, res) => {
+  res.send("🚀 ShoeVerse Backend is Live!");
+});
+
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ 
