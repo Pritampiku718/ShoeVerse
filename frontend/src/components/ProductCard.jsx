@@ -10,12 +10,14 @@ const ProductCard = ({ product }) => {
      ✅ Get Primary Image Object
   ================================= */
   const getPrimaryImage = () => {
-    if (!product.images || product.images.length === 0) return null;
+    if (!product.images || product.images.length === 0) {
+      return "https://via.placeholder.com/300?text=No+Image";
+    }
 
     const primary =
       product.images.find((img) => img.isPrimary) || product.images[0];
 
-    return primary.url;
+    return primary.url; // ✅ Cloudinary URL Direct
   };
 
   const primaryImageUrl = getPrimaryImage();
@@ -45,18 +47,15 @@ const ProductCard = ({ product }) => {
 
         {/* Product Image */}
         <div className="myntra-img-box">
-          {primaryImageUrl ? (
-            <img
-              src={primaryImageUrl}
-              alt={product.name}
-              onError={(e) => {
-                e.target.src =
-                  "https://via.placeholder.com/300x300?text=No+Image";
-              }}
-            />
-          ) : (
-            <p>No Image</p>
-          )}
+          <img
+            src={primaryImageUrl}
+            alt={product.name}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src =
+                "https://via.placeholder.com/300?text=Image+Error";
+            }}
+          />
         </div>
 
         {/* Product Info */}
@@ -80,9 +79,7 @@ const ProductCard = ({ product }) => {
 
             <span className="old-price">₹{originalPrice}</span>
 
-            <span className="discount-text">
-              ({discount}% OFF)
-            </span>
+            <span className="discount-text">({discount}% OFF)</span>
           </div>
         </div>
       </Card>

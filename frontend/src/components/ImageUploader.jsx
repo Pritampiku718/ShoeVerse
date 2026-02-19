@@ -14,19 +14,21 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
+
+  // Always store images as objects
   const [images, setImages] = useState(existingImages);
 
-  /* =====================================
-     ✅ Upload Images Handler
-  ====================================== */
+  /* =====================================================
+     ✅ FILE SELECT + MULTIPLE UPLOAD
+  ===================================================== */
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files);
 
     if (files.length === 0) return;
 
-    /* ================================
-       ✅ Validate File Types
-    ================================= */
+    /* ===============================
+       ✅ VALIDATION
+    =============================== */
     const validTypes = [
       "image/jpeg",
       "image/jpg",
@@ -45,9 +47,6 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
       return;
     }
 
-    /* ================================
-       ✅ Validate File Size (5MB)
-    ================================= */
     const maxSize = 5 * 1024 * 1024;
     const oversizedFiles = files.filter((file) => file.size > maxSize);
 
@@ -64,15 +63,19 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
     try {
       const formData = new FormData();
 
-      // Append all selected files
       files.forEach((file) => {
         formData.append("images", file);
       });
+
+      console.log("Uploading files:", files.length);
 
       toast.loading(`Uploading ${files.length} image(s)...`, {
         id: "upload",
       });
 
+      /* ===============================
+         ✅ API CALL
+      =============================== */
       const { data } = await axiosInstance.post(
         "/upload/multiple",
         formData,
@@ -80,6 +83,7 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
+
           onUploadProgress: (progressEvent) => {
             if (progressEvent.total) {
               const percentCompleted = Math.round(
@@ -91,20 +95,24 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
         }
       );
 
-      console.log("Upload Response:", data);
+      console.log("Upload response:", data);
 
-      /* ================================
-         ✅ Store Images as Objects
-      ================================= */
+      /* ===============================
+         ✅ STORE IMAGES AS OBJECTS
+      =============================== */
       if (data && data.files) {
-        const updatedImages = [...images, ...data.files];
+        const newImages = data.files.map((file, index) => ({
+          url: file.url, // Cloudinary URL
+          publicId: file.filename, // Required for delete
+          alt: files[index].name,
+          isPrimary: images.length === 0 && index === 0,
+        }));
 
-        // Ensure at least one primary image
-        if (!updatedImages.some((img) => img.isPrimary)) {
-          updatedImages[0].isPrimary = true;
-        }
+        const updatedImages = [...images, ...newImages];
 
         setImages(updatedImages);
+
+        // Send back to parent
         onImageUpload(updatedImages);
 
         toast.success(`${data.files.length} image(s) uploaded successfully`, {
@@ -115,9 +123,9 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
       setUploadProgress(100);
       setTimeout(() => setUploadProgress(0), 1000);
     } catch (error) {
-      console.error("Upload Error:", error);
+      console.error("Upload error:", error);
 
-      let errorMessage = "Error uploading images";
+      let errorMessage = "Error uploading image";
 
       if (error.response) {
         errorMessage =
@@ -137,29 +145,42 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
     }
   };
 
-  /* =====================================
-     ✅ Remove Image Handler
-  ====================================== */
-  const handleRemoveImage = (index) => {
+  /* =====================================================
+     ✅ REMOVE IMAGE (Cloudinary Delete)
+  ===================================================== */
+  const handleRemoveImage = async (index) => {
+    const imageToRemove = images[index];
+
+    try {
+      toast.loading("Removing image...", { id: "remove" });
+
+      if (imageToRemove.publicId) {
+        await axiosInstance.delete(`/upload/${imageToRemove.publicId}`);
+      }
+
+      toast.success("Image removed successfully", { id: "remove" });
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error("Failed to remove image", { id: "remove" });
+    }
+
+    /* ===============================
+       ✅ UPDATE STATE AFTER REMOVE
+    =============================== */
     const updatedImages = images.filter((_, i) => i !== index);
 
     // Ensure one primary remains
-    if (
-      updatedImages.length > 0 &&
-      !updatedImages.some((img) => img.isPrimary)
-    ) {
+    if (updatedImages.length > 0 && !updatedImages.some((img) => img.isPrimary)) {
       updatedImages[0].isPrimary = true;
     }
 
     setImages(updatedImages);
     onImageUpload(updatedImages);
-
-    toast.success("Image removed successfully");
   };
 
-  /* =====================================
-     ✅ Set Primary Image Handler
-  ====================================== */
+  /* =====================================================
+     ✅ SET PRIMARY IMAGE
+  ===================================================== */
   const setPrimaryImage = (index) => {
     const updatedImages = images.map((img, i) => ({
       ...img,
@@ -169,12 +190,15 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
     setImages(updatedImages);
     onImageUpload(updatedImages);
 
-    toast.success("Primary image updated!");
+    toast.success("Primary image updated");
   };
 
+  /* =====================================================
+     ✅ UI RENDER
+  ===================================================== */
   return (
     <div className="image-uploader">
-      {/* Error Alert */}
+      {/* ERROR ALERT */}
       {error && (
         <Alert
           variant="danger"
@@ -186,9 +210,7 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
         </Alert>
       )}
 
-      {/* ================================
-         ✅ Image Preview Grid
-      ================================= */}
+      {/* IMAGE PREVIEW GRID */}
       {images.length > 0 && (
         <div className="image-preview-grid mb-3">
           {images.map((image, index) => (
@@ -201,21 +223,22 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
             >
               <img
                 src={image.url}
-                alt={image.alt || "Product Image"}
+                alt={image.alt}
                 onError={(e) => {
+                  e.target.onerror = null;
                   e.target.src =
-                    "https://via.placeholder.com/150?text=No+Image";
+                    "https://via.placeholder.com/150?text=Image+Error";
                 }}
               />
 
-              {/* Primary Badge */}
+              {/* PRIMARY BADGE */}
               {image.isPrimary && (
                 <span className="primary-badge">
                   <FaCheckCircle /> Primary
                 </span>
               )}
 
-              {/* Remove Button */}
+              {/* REMOVE BUTTON */}
               <button
                 type="button"
                 className="remove-image-btn"
@@ -231,17 +254,15 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
         </div>
       )}
 
-      {/* ================================
-         ✅ Upload Input Area
-      ================================= */}
+      {/* UPLOAD INPUT */}
       <div className="upload-area">
-        <input
+        <Form.Control
           type="file"
           id="image-upload"
           accept="image/*"
+          onChange={handleFileSelect}
           multiple
           disabled={uploading}
-          onChange={handleFileSelect}
           style={{ display: "none" }}
         />
 
@@ -254,14 +275,13 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
               <ProgressBar
                 now={uploadProgress}
                 className="upload-progress"
+                label={`${uploadProgress}%`}
               />
             </div>
           ) : (
             <div className="upload-prompt">
               <FaCloudUploadAlt className="upload-icon" />
-              <span className="upload-text">
-                Click to upload images
-              </span>
+              <span className="upload-text">Click to upload images</span>
               <span className="upload-hint">
                 JPG, PNG, WebP, GIF up to 5MB
               </span>
@@ -270,7 +290,7 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
         </label>
       </div>
 
-      {/* No Images Message */}
+      {/* EMPTY STATE */}
       {images.length === 0 && !uploading && (
         <div className="text-muted text-center mt-3">
           <FaImage className="me-2" />
@@ -278,7 +298,7 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
         </div>
       )}
 
-      {/* Footer Note */}
+      {/* FOOTER */}
       {images.length > 0 && (
         <div className="image-uploader-footer mt-2">
           <small className="text-muted">

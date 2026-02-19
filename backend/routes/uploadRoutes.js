@@ -1,112 +1,172 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
-import { protect, admin } from "../middleware/authMiddleware.js";
+import cloudinary from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { protect, admin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-/* ===============================
-   ✅ BASE URL (Render + Local)
-================================= */
-const BASE_URL =
-  process.env.BASE_URL || "http://localhost:5000";
+/* =====================================================
+   ✅ CLOUDINARY CONFIGURATION
+===================================================== */
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-/* ===============================
-   ✅ Upload Folder Setup
-================================= */
-const uploadDir = path.join(__dirname, "../uploads");
+/* =====================================================
+   ✅ CLOUDINARY STORAGE SETUP
+===================================================== */
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary.v2,
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+  params: async (req, file) => {
+    return {
+      folder: "shoeverse-products",
 
-/* ===============================
-   ✅ Multer Storage
-================================= */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
 
-  filename: (req, file, cb) => {
-    const uniqueSuffix =
-      Date.now() + "-" + Math.round(Math.random() * 1e9);
-
-    const ext = path.extname(file.originalname);
-
-    cb(null, "image-" + uniqueSuffix + ext);
+      public_id: `shoe-${Date.now()}-${Math.round(
+        Math.random() * 1e9
+      )}`,
+    };
   },
 });
 
+/* =====================================================
+   ✅ MULTER CONFIGURATION
+===================================================== */
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Max 5MB
+  },
 
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files allowed"), false);
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"), false);
+    }
   },
 });
 
-/* ===============================
-   ✅ Upload Single Image
-================================= */
-router.post("/", protect, admin, upload.single("image"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
+/* =====================================================
+   ✅ SINGLE IMAGE UPLOAD
+   POST /api/upload
+===================================================== */
+router.post(
+  "/",
+  protect,
+  admin,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: "No file uploaded",
+        });
+      }
+
+      res.json({
+        message: "Upload successful",
+
+        file: {
+          url: req.file.path, // ✅ Cloudinary URL
+          publicId: req.file.filename, // ✅ Needed for delete
+          alt: req.file.originalname,
+          isPrimary: true,
+        },
+      });
+    } catch (error) {
+      console.error("Single upload error:", error);
+
+      res.status(500).json({
+        message: "Image upload failed",
+      });
+    }
   }
+);
 
-  res.json({
-    message: "Upload successful",
-    file: {
-      url: `${BASE_URL}/uploads/${req.file.filename}`,
-      alt: req.file.originalname,
-      isPrimary: true,
-    },
-  });
-});
-
-/* ===============================
-   ✅ Upload Multiple Images
-================================= */
+/* =====================================================
+   ✅ MULTIPLE IMAGE UPLOAD
+   POST /api/upload/multiple
+===================================================== */
 router.post(
   "/multiple",
   protect,
   admin,
   upload.array("images", 10),
-  (req, res) => {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: "No files uploaded" });
+  async (req, res) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({
+          message: "No files uploaded",
+        });
+      }
+
+      const files = req.files.map((file, index) => ({
+        url: file.path, // ✅ Cloudinary URL
+        publicId: file.filename, // ✅ Needed for delete
+        alt: file.originalname,
+        isPrimary: index === 0,
+      }));
+
+      res.json({
+        message: "Upload successful",
+        files,
+      });
+    } catch (error) {
+      console.error("Multiple upload error:", error);
+
+      res.status(500).json({
+        message: "Multiple image upload failed",
+      });
     }
-
-    const files = req.files.map((file, index) => ({
-      url: `${BASE_URL}/uploads/${file.filename}`,
-      alt: file.originalname,
-      isPrimary: index === 0,
-    }));
-
-    res.json({
-      message: "Upload successful",
-      files,
-    });
   }
 );
 
-/* ===============================
-   ✅ Delete Image
-================================= */
-router.delete("/:filename", protect, admin, (req, res) => {
-  const filepath = path.join(uploadDir, req.params.filename);
+/* =====================================================
+   ✅ DELETE IMAGE FROM CLOUDINARY
+   DELETE /api/upload/:publicId
+===================================================== */
+router.delete(
+  "/:publicId",
+  protect,
+  admin,
+  async (req, res) => {
+    try {
+      const publicId = req.params.publicId;
 
-  if (fs.existsSync(filepath)) {
-    fs.unlinkSync(filepath);
-    res.json({ message: "File deleted successfully" });
-  } else {
-    res.status(404).json({ message: "File not found" });
+      if (!publicId) {
+        return res.status(400).json({
+          message: "No image id provided",
+        });
+      }
+
+      // ✅ Delete from Cloudinary
+      const result = await cloudinary.v2.uploader.destroy(publicId);
+
+      if (result.result !== "ok") {
+        return res.status(404).json({
+          message: "Image not found in Cloudinary",
+        });
+      }
+
+      res.json({
+        message: "Image deleted successfully",
+      });
+    } catch (error) {
+      console.error("Delete image error:", error);
+
+      res.status(500).json({
+        message: "Failed to delete image",
+      });
+    }
   }
-});
+);
 
 export default router;

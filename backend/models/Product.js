@@ -1,28 +1,28 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Please add a product name'],
+      required: [true, "Please add a product name"],
       trim: true,
     },
     brand: {
       type: String,
-      required: [true, 'Please add a brand'],
+      required: [true, "Please add a brand"],
     },
     category: {
       type: String,
-      required: [true, 'Please add a category'],
-      enum: ['Running', 'Casual', 'Sports', 'Formal', 'Boots', 'Sneakers'],
+      required: [true, "Please add a category"],
+      enum: ["Running", "Casual", "Sports", "Formal", "Boots", "Sneakers"],
     },
     description: {
       type: String,
-      required: [true, 'Please add a description'],
+      required: [true, "Please add a description"],
     },
     price: {
       type: Number,
-      required: [true, 'Please add a price'],
+      required: [true, "Please add a price"],
       min: 0,
     },
     originalPrice: {
@@ -31,15 +31,16 @@ const productSchema = new mongoose.Schema(
     },
     stock: {
       type: Number,
-      required: [true, 'Please add stock quantity'],
+      required: [true, "Please add stock quantity"],
       min: 0,
       default: 0,
     },
     images: [
       {
-        url: String,
-        alt: String,
-        isPrimary: { type: Boolean, default: false }
+        url: { type: String, required: true },
+        publicId: { type: String, required: true },
+        alt: { type: String },
+        isPrimary: { type: Boolean, default: false },
       },
     ],
     sizes: [
@@ -64,8 +65,8 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Product = mongoose.model('Product', productSchema);
+const Product = mongoose.model("Product", productSchema);
 export default Product;
