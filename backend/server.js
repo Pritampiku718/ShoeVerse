@@ -55,18 +55,18 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 /* ============================================
-   ✅ CORS Configuration (FINAL PERFECT FIX)
+   ✅ CORS Configuration (FINAL SAFE FIX)
+   Render + Node 22 Compatible
 ============================================ */
 app.use(
   cors({
     origin: function (origin, callback) {
-      // ✅ Show incoming origin in Render logs
       console.log("🌍 Incoming Origin:", origin);
 
-      // ✅ Allow Postman, Render health check
+      // ✅ Allow Postman / Render health check
       if (!origin) return callback(null, true);
 
-      // ✅ Allow localhost for development
+      // ✅ Allow localhost during development
       if (origin.startsWith("http://localhost")) {
         return callback(null, true);
       }
@@ -88,11 +88,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-/* ============================================
-   ✅ IMPORTANT: Allow All Preflight Requests
-============================================ */
-app.options("*", cors());
 
 /* ============================================
    ✅ Body Parser Middleware
