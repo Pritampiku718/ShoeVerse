@@ -103,7 +103,10 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
       if (data && data.files) {
         const newImages = data.files.map((file, index) => ({
           url: file.url, // Cloudinary URL
-          publicId: file.filename, // Required for delete
+
+          // ✅ FIXED: Correct Cloudinary Public ID
+          publicId: file.publicId,
+
           alt: files[index].name,
           isPrimary: images.length === 0 && index === 0,
         }));

@@ -19,9 +19,12 @@ console.log("🌐 Connecting to backend at:", API_URL);
 const axiosInstance = axios.create({
   baseURL: API_URL,
 
-  headers: {
-    "Content-Type": "application/json",
-  },
+  // ❌ IMPORTANT FIX:
+  // Do NOT force "Content-Type": "application/json" globally
+  // Because file upload needs multipart/form-data
+  // Axios will automatically handle Content-Type correctly
+
+  headers: {},
 
   withCredentials: true,
 

@@ -76,7 +76,7 @@ router.post(
 
         file: {
           url: req.file.path, // ✅ Cloudinary URL
-          publicId: req.file.filename, // ✅ Needed for delete
+          publicId: req.file.public_id, // ✅ FIXED (Correct ID)
           alt: req.file.originalname,
           isPrimary: true,
         },
@@ -110,7 +110,7 @@ router.post(
 
       const files = req.files.map((file, index) => ({
         url: file.path, // ✅ Cloudinary URL
-        publicId: file.filename, // ✅ Needed for delete
+        publicId: file.public_id, // ✅ FIXED (Correct ID)
         alt: file.originalname,
         isPrimary: index === 0,
       }));
