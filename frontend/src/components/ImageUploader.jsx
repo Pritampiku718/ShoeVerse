@@ -35,6 +35,7 @@ const ImageUploader = ({ onImageUpload, existingImages = [] }) => {
       "image/png",
       "image/webp",
       "image/gif",
+      "image/avif"
     ];
 
     const invalidFiles = files.filter(

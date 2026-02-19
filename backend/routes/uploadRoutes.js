@@ -26,7 +26,7 @@ const storage = new CloudinaryStorage({
     return {
       folder: "shoeverse-products",
 
-      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "avif"],
 
       public_id: `shoe-${Date.now()}-${Math.round(
         Math.random() * 1e9
