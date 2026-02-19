@@ -1,5 +1,5 @@
 import Product from "../models/Product.js";
-import cloudinary from "cloudinary";
+import {v2 as cloudinary} from "cloudinary";
 
 /* ======================================
    ✅ GET ALL PRODUCTS (Search + Filter + Pagination)
