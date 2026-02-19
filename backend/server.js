@@ -55,36 +55,14 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 /* ============================================
-   ✅ CORS Configuration (FINAL SAFE FIX)
-   Render + Node 22 Compatible
+   ✅ CORS Configuration (FINAL FIX - NO ERRORS)
+   Works with Render + Vercel + Preview URLs
 ============================================ */
 app.use(
   cors({
-    origin: function (origin, callback) {
-      console.log("🌍 Incoming Origin:", origin);
-
-      // ✅ Allow Postman / Render health check
-      if (!origin) return callback(null, true);
-
-      // ✅ Allow localhost during development
-      if (origin.startsWith("http://localhost")) {
-        return callback(null, true);
-      }
-
-      // ✅ Allow ALL Vercel deployments of your frontend
-      if (origin.includes("shoeverse-frontend.vercel.app")) {
-        return callback(null, true);
-      }
-
-      // ❌ Block everything else
-      console.log("❌ Blocked by CORS Origin:", origin);
-      return callback(new Error("CORS Not Allowed ❌"));
-    },
-
+    origin: true, // ✅ Allow all origins automatically
     credentials: true,
-
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
