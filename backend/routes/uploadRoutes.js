@@ -20,7 +20,7 @@ cloudinary.config({
    ✅ CLOUDINARY STORAGE SETUP
 ===================================================== */
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary.v2,
+  cloudinary: cloudinary,
 
   params: async (req, file) => {
     return {
