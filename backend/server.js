@@ -55,14 +55,36 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 /* ============================================
-   ✅ CORS Configuration (FINAL FIX - NO ERRORS)
-   Works with Render + Vercel + Preview URLs
+   ✅ CORS Configuration (FINAL FIX)
+   Allows ALL Vercel Deployments + Localhost
 ============================================ */
 app.use(
   cors({
-    origin: true, // ✅ Allow all origins automatically
+    origin: function (origin, callback) {
+      console.log("🌍 Incoming Origin:", origin);
+
+      // ✅ Allow Postman / Render health checks
+      if (!origin) return callback(null, true);
+
+      // ✅ Allow localhost development
+      if (origin.startsWith("http://localhost")) {
+        return callback(null, true);
+      }
+
+      // ✅ Allow ALL Vercel deployments (Production + Preview)
+      if (origin.includes(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      // ❌ Block everything else
+      console.log("❌ Blocked by CORS Origin:", origin);
+      return callback(new Error("CORS Not Allowed ❌"));
+    },
+
     credentials: true,
+
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
