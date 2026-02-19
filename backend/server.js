@@ -55,28 +55,30 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 /* ============================================
-   ✅ CORS Configuration (Production Ready)
+   ✅ CORS Configuration (FINAL PERFECT FIX)
 ============================================ */
-const allowedOrigins = [
-  "http://localhost:5173", // Local frontend
-  "http://localhost:3000",
-
-  // ✅ Vercel frontend URL
-  "https://shoeverse-frontend.vercel.app",
-];
-
 app.use(
   cors({
     origin: function (origin, callback) {
-      // ✅ Allow requests with no origin (Postman, Render health check)
+      // ✅ Show incoming origin in Render logs
+      console.log("🌍 Incoming Origin:", origin);
+
+      // ✅ Allow Postman, Render health check
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      // ✅ Allow localhost for development
+      if (origin.startsWith("http://localhost")) {
         return callback(null, true);
-      } else {
-        console.log("❌ Blocked by CORS:", origin);
-        return callback(new Error("CORS Not Allowed ❌"));
       }
+
+      // ✅ Allow ALL Vercel deployments of your frontend
+      if (origin.includes("shoeverse-frontend.vercel.app")) {
+        return callback(null, true);
+      }
+
+      // ❌ Block everything else
+      console.log("❌ Blocked by CORS Origin:", origin);
+      return callback(new Error("CORS Not Allowed ❌"));
     },
 
     credentials: true,
