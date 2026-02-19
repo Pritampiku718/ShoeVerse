@@ -7,6 +7,25 @@ import "./ProductCard.css";
 
 const ProductCard = ({ product }) => {
   /* ================================
+     ✅ Cloudinary Optimization Helper
+     Compress + Resize for Faster Load
+  ================================= */
+  const getOptimizedImage = (url) => {
+    if (!url) {
+      return "https://via.placeholder.com/300?text=No+Image";
+    }
+
+    // ✅ Only optimize Cloudinary images
+    if (!url.includes("cloudinary")) return url;
+
+    // ✅ Auto compress + auto format + resize for cards
+    return url.replace(
+      "/upload/",
+      "/upload/q_auto,f_auto,w_500/"
+    );
+  };
+
+  /* ================================
      ✅ Get Primary Image Object
   ================================= */
   const getPrimaryImage = () => {
@@ -17,7 +36,8 @@ const ProductCard = ({ product }) => {
     const primary =
       product.images.find((img) => img.isPrimary) || product.images[0];
 
-    return primary.url; // ✅ Cloudinary URL Direct
+    // ✅ Return Optimized URL
+    return getOptimizedImage(primary.url);
   };
 
   const primaryImageUrl = getPrimaryImage();
@@ -50,6 +70,7 @@ const ProductCard = ({ product }) => {
           <img
             src={primaryImageUrl}
             alt={product.name}
+            loading="lazy" // ✅ Faster page load
             onError={(e) => {
               e.target.onerror = null;
               e.target.src =

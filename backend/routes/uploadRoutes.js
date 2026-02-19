@@ -36,6 +36,17 @@ const storage = new CloudinaryStorage({
         "avif",
       ],
 
+      // ✅ Auto Compression + Auto Format
+      transformation: [
+        {
+          width: 800,
+          height: 800,
+          crop: "limit",
+          quality: "auto",
+          fetch_format: "auto",
+        },
+      ],
+
       // ✅ Unique filename
       public_id: `shoe-${Date.now()}-${Math.round(
         Math.random() * 1e9
@@ -117,10 +128,10 @@ router.post(
         });
       }
 
-      // ✅ FIXED: Always return publicId properly
+      // ✅ FIXED: Always return correct publicId
       const files = req.files.map((file, index) => ({
         url: file.path, // ✅ Cloudinary URL
-        publicId: file.filename, // ✅ FIXED (Required for Product Save)
+        publicId: file.filename, // ✅ FIXED (Required for MongoDB Save)
         alt: file.originalname,
         isPrimary: index === 0,
       }));
