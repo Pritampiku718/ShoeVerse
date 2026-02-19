@@ -1,22 +1,37 @@
 import axios from "axios";
 
-// Backend API Base URL
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+/* =====================================
+   ✅ Backend API Base URL (LOCAL + LIVE)
+===================================== */
+
+// ✅ Localhost fallback
+// ✅ Vercel Production URL will come from Environment Variable
+
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 console.log("🌐 Connecting to backend at:", API_URL);
 
+/* =====================================
+   ✅ Axios Instance Setup
+===================================== */
+
 const axiosInstance = axios.create({
   baseURL: API_URL,
+
   headers: {
     "Content-Type": "application/json",
   },
+
   withCredentials: true,
+
   timeout: 30000,
 });
 
 /* =====================================
    ✅ REQUEST INTERCEPTOR (TOKEN ADD)
 ===================================== */
+
 axiosInstance.interceptors.request.use(
   (config) => {
     // Get token from localStorage
@@ -36,17 +51,19 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  },
+  }
 );
 
 /* =====================================
    ✅ RESPONSE INTERCEPTOR
 ===================================== */
+
 axiosInstance.interceptors.response.use(
   (response) => {
     console.log("✅ Response received:", response.status, response.config.url);
     return response;
   },
+
   (error) => {
     console.error("❌ API Error:", error.message, error.config?.url);
 
@@ -83,7 +100,11 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
+
+/* =====================================
+   ✅ Export Axios Instance
+===================================== */
 
 export default axiosInstance;
