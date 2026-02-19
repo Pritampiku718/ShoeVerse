@@ -1,0 +1,197 @@
+.product-details-page {
+  padding: 25px 0;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* Breadcrumb */
+.breadcrumb-text {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+/* Layout */
+.product-main {
+  margin-top: 15px;
+}
+
+/* Image Box (Amazon Style Smaller) */
+.image-box {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  border: 1px solid #eee;
+}
+
+.image-box img {
+  width: 100%;
+  max-height: 320px; /* ✅ Smaller */
+  object-fit: contain;
+}
+
+/* Details Box */
+.details-box {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid #eee;
+  text-align: left;
+}
+
+/* Title */
+.details-box h2 {
+  font-size: 22px; /* ✅ Smaller */
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.brand {
+  font-size: 14px;
+  color: #007185; /* Amazon blue */
+  margin-bottom: 10px;
+}
+
+/* Price */
+.price {
+  font-size: 24px;
+  font-weight: bold;
+  color: #b12704; /* Amazon red */
+  margin: 10px 0;
+}
+
+/* Stock Badge */
+.stock-badge {
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+/* Option Sections */
+.option-section {
+  margin-bottom: 15px;
+}
+
+.option-section p {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Size + Color Buttons Compact */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.options button {
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.options button:hover {
+  border-color: #007185;
+}
+
+.options button.active {
+  background: #007185;
+  color: white;
+  border-color: #007185;
+}
+
+/* Quantity */
+.quantity-section p {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qty-control button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.qty-control span {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* Buttons Amazon Style */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.cart-btn {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: #ffd814 !important; /* Amazon Yellow */
+  border: 1px solid #fcd200 !important;
+  color: black !important;
+  font-weight: 600;
+}
+
+.cart-btn:hover {
+  background: #f7ca00 !important;
+}
+
+.wish-btn {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+/* Description */
+.description-box {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.description-box h4 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.description-box p {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .details-box {
+    margin-top: 15px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .cart-btn,
+  .wish-btn {
+    width: 100%;
+  }
+}
