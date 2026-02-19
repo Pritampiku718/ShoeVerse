@@ -27,8 +27,12 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 
 console.log("📊 Environment check:");
 console.log(`   PORT: ${process.env.PORT || "Not set (default 5000)"}`);
-console.log(`   MONGO_URI: ${process.env.MONGO_URI ? "✅ Found" : "❌ Not found"}`);
-console.log(`   JWT_SECRET: ${process.env.JWT_SECRET ? "✅ Found" : "❌ Not found"}`);
+console.log(
+  `   MONGO_URI: ${process.env.MONGO_URI ? "✅ Found" : "❌ Not found"}`
+);
+console.log(
+  `   JWT_SECRET: ${process.env.JWT_SECRET ? "✅ Found" : "❌ Not found"}`
+);
 
 /* ============================================
    ✅ Connect MongoDB Atlas
@@ -57,26 +61,36 @@ const allowedOrigins = [
   "http://localhost:5173", // Local frontend
   "http://localhost:3000",
 
-  // ✅ Add your Vercel frontend URL here
+  // ✅ Vercel frontend URL
   "https://shoeverse-frontend.vercel.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // ✅ Allow requests with no origin (Postman, Render health check)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
+        console.log("❌ Blocked by CORS:", origin);
         return callback(new Error("CORS Not Allowed ❌"));
       }
     },
+
     credentials: true,
+
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+/* ============================================
+   ✅ IMPORTANT: Allow All Preflight Requests
+============================================ */
+app.options("*", cors());
 
 /* ============================================
    ✅ Body Parser Middleware
