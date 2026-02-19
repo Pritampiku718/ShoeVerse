@@ -7,19 +7,13 @@ import "./ProductCard.css";
 
 const ProductCard = ({ product }) => {
   /* ================================
-     ✅ Get Primary Image
+     ✅ Get Primary Image Object
   ================================= */
   const getPrimaryImage = () => {
     if (!product.images || product.images.length === 0) return null;
 
     const primary =
       product.images.find((img) => img.isPrimary) || product.images[0];
-
-    if (primary.url?.startsWith("http")) return primary.url;
-
-    if (primary.url?.startsWith("/api/image/")) {
-      return `http://localhost:5000${primary.url}`;
-    }
 
     return primary.url;
   };
@@ -51,7 +45,18 @@ const ProductCard = ({ product }) => {
 
         {/* Product Image */}
         <div className="myntra-img-box">
-          <img src={primaryImageUrl} alt={product.name} />
+          {primaryImageUrl ? (
+            <img
+              src={primaryImageUrl}
+              alt={product.name}
+              onError={(e) => {
+                e.target.src =
+                  "https://via.placeholder.com/300x300?text=No+Image";
+              }}
+            />
+          ) : (
+            <p>No Image</p>
+          )}
         </div>
 
         {/* Product Info */}
