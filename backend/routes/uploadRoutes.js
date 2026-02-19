@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { v2 as cloudinary} from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 import { protect, admin } from "../middleware/authMiddleware.js";
@@ -20,7 +20,7 @@ cloudinary.config({
    ✅ CLOUDINARY STORAGE SETUP
 ===================================================== */
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
 
   params: async (req, file) => {
     return {
@@ -76,7 +76,7 @@ router.post(
 
         file: {
           url: req.file.path, // ✅ Cloudinary URL
-          publicId: req.file.public_id, // ✅ FIXED (Correct ID)
+          publicId: req.file.public_id, // ✅ Correct Cloudinary ID
           alt: req.file.originalname,
           isPrimary: true,
         },
@@ -110,7 +110,7 @@ router.post(
 
       const files = req.files.map((file, index) => ({
         url: file.path, // ✅ Cloudinary URL
-        publicId: file.public_id, // ✅ FIXED (Correct ID)
+        publicId: file.public_id, // ✅ Correct Cloudinary ID
         alt: file.originalname,
         isPrimary: index === 0,
       }));
@@ -147,8 +147,8 @@ router.delete(
         });
       }
 
-      // ✅ Delete from Cloudinary
-      const result = await cloudinary.v2.uploader.destroy(publicId);
+      // ✅ Delete from Cloudinary (Correct)
+      const result = await cloudinary.uploader.destroy(publicId);
 
       if (result.result !== "ok") {
         return res.status(404).json({

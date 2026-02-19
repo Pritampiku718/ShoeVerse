@@ -1,5 +1,5 @@
 import Product from "../models/Product.js";
-import {v2 as cloudinary} from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 
 /* ======================================
    ✅ GET ALL PRODUCTS (Search + Filter + Pagination)
@@ -218,7 +218,9 @@ export const deleteProduct = async (req, res) => {
       for (const img of product.images) {
         if (img.publicId) {
           try {
-            await cloudinary.v2.uploader.destroy(img.publicId);
+            // ✅ FIXED: Correct Cloudinary Destroy
+            await cloudinary.uploader.destroy(img.publicId);
+
             console.log("✅ Deleted from Cloudinary:", img.publicId);
           } catch (err) {
             console.error(
