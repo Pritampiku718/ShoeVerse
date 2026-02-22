@@ -4,6 +4,10 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import helmet from "helmet";
+import morgan from "morgan";
+import compression from "compression";
+import rateLimit from "express-rate-limit";
 
 import connectDB from "./config/db.js";
 
@@ -14,7 +18,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
 /* ============================================
-   ✅ Setup __dirname for ES Modules
+   ✅ Setup __dirname (ES Module Fix)
 ============================================ */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,90 +26,103 @@ const __dirname = path.dirname(__filename);
 /* ============================================
    ✅ Load Environment Variables FIRST
 ============================================ */
-console.log("📁 Loading environment variables...");
 dotenv.config({ path: path.join(__dirname, ".env") });
 
-console.log("📊 Environment check:");
-console.log(`   PORT: ${process.env.PORT || "Not set (default 5000)"}`);
-console.log(
-  `   MONGO_URI: ${process.env.MONGO_URI ? "✅ Found" : "❌ Not found"}`
-);
-console.log(
-  `   JWT_SECRET: ${process.env.JWT_SECRET ? "✅ Found" : "❌ Not found"}`
-);
+const NODE_ENV = process.env.NODE_ENV || "development";
+const PORT = process.env.PORT || 5000;
 
 /* ============================================
-   ✅ Connect MongoDB Atlas
+   ✅ Connect MongoDB
 ============================================ */
 connectDB();
 
 /* ============================================
-   ✅ Initialize Express App
+   ✅ Initialize Express
 ============================================ */
 const app = express();
 
 /* ============================================
-   ✅ Create Uploads Folder Automatically
+   ✅ Security Middlewares (Premium Setup)
+============================================ */
+app.use(helmet()); // Security headers
+app.use(compression()); // Gzip compression
+
+// Rate Limiting (Prevent Abuse / DDoS)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 500, // Max requests per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api", limiter);
+
+/* ============================================
+   ✅ Advanced CORS Configuration
+============================================ */
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+   "http://localhost:5174",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.includes(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS Not Allowed ❌"));
+    },
+    credentials: true,
+  })
+);
+
+/* ============================================
+   ✅ Body Parser
+============================================ */
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+/* ============================================
+   ✅ Logger (Dev vs Prod)
+============================================ */
+if (NODE_ENV === "development") {
+  app.use(morgan("dev"));
+} else {
+  app.use(morgan("combined"));
+}
+
+/* ============================================
+   ✅ Auto Create Uploads Folder
 ============================================ */
 const uploadDir = path.join(__dirname, "uploads");
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-  console.log("✅ Uploads directory created");
 }
 
-/* ============================================
-   ✅ CORS Configuration (FINAL FIX)
-   Allows ALL Vercel Deployments + Localhost
-============================================ */
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      console.log("🌍 Incoming Origin:", origin);
-
-      // ✅ Allow Postman / Render health checks
-      if (!origin) return callback(null, true);
-
-      // ✅ Allow localhost development
-      if (origin.startsWith("http://localhost")) {
-        return callback(null, true);
-      }
-
-      // ✅ Allow ALL Vercel deployments (Production + Preview)
-      if (origin.includes(".vercel.app")) {
-        return callback(null, true);
-      }
-
-      // ❌ Block everything else
-      console.log("❌ Blocked by CORS Origin:", origin);
-      return callback(new Error("CORS Not Allowed ❌"));
-    },
-
-    credentials: true,
-
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-/* ============================================
-   ✅ Body Parser Middleware
-============================================ */
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-/* ============================================
-   ✅ Static Folder for Uploaded Images
-============================================ */
 app.use("/uploads", express.static(uploadDir));
 
 /* ============================================
-   ✅ Request Logger (Debugging)
+   ✅ Health & Root Routes
 ============================================ */
-app.use((req, res, next) => {
-  console.log(`📌 ${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
+app.get("/", (req, res) => {
+  res.send("🚀 ShoeVerse Premium Backend Running");
+});
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    uptime: process.uptime(),
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 /* ============================================
@@ -118,45 +135,12 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/admin", adminRoutes);
 
 /* ============================================
-   ✅ Root Route Fix (So Render URL Works)
-============================================ */
-app.get("/", (req, res) => {
-  res.send("🚀 ShoeVerse Backend API Running Successfully!");
-});
-
-/* ============================================
-   ✅ Health Check Route
-============================================ */
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "OK",
-    message: "ShoeVerse API is running",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-/* ============================================
-   ✅ Test Route
-============================================ */
-app.get("/api/test", (req, res) => {
-  res.json({
-    message: "Test endpoint is working!",
-    env: {
-      port: process.env.PORT,
-      mongo_uri_set: !!process.env.MONGO_URI,
-      node_env: process.env.NODE_ENV || "development",
-    },
-  });
-});
-
-/* ============================================
-   ✅ 404 Route Handler
+   ✅ 404 Handler
 ============================================ */
 app.use((req, res) => {
   res.status(404).json({
+    success: false,
     message: "Route not found ❌",
-    method: req.method,
-    path: req.url,
   });
 });
 
@@ -164,26 +148,37 @@ app.use((req, res) => {
    ✅ Global Error Handler
 ============================================ */
 app.use((err, req, res, next) => {
-  console.error("🔥 Server error:", err);
+  console.error("🔥 ERROR:", err.message);
 
-  res.status(500).json({
-    message: "Internal server error",
-    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message:
+      NODE_ENV === "development"
+        ? err.message
+        : "Internal Server Error",
   });
 });
 
 /* ============================================
-   ✅ Start Server (Render Uses process.env.PORT)
+   ✅ Graceful Shutdown (Premium Feature)
 ============================================ */
-const PORT = process.env.PORT || 5000;
+process.on("unhandledRejection", (err) => {
+  console.error("🔥 Unhandled Rejection:", err.message);
+  server.close(() => process.exit(1));
+});
 
-app.listen(PORT, () => {
-  console.log("\n" + "=".repeat(50));
-  console.log("🚀 SERVER STARTED SUCCESSFULLY");
-  console.log("=".repeat(50));
-  console.log(`📍 Running on Port: ${PORT}`);
-  console.log(`📍 Health Check: /api/health`);
-  console.log(`📍 Products API: /api/products`);
-  console.log(`📍 Uploads Folder: ${uploadDir}`);
-  console.log("=".repeat(50) + "\n");
+process.on("uncaughtException", (err) => {
+  console.error("🔥 Uncaught Exception:", err.message);
+  process.exit(1);
+});
+
+/* ============================================
+   ✅ Start Server
+============================================ */
+const server = app.listen(PORT, () => {
+  console.log("\n====================================");
+  console.log("🚀 ShoeVerse Server Started");
+  console.log("🌍 Environment:", NODE_ENV);
+  console.log("📍 Port:", PORT);
+  console.log("====================================\n");
 });

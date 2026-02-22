@@ -1,159 +1,94 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { ErrorBoundary } from "react-error-boundary";
+import { AppRoutes } from "./routes/AppRoutes";
+import { useThemeStore } from "./store/themeStore";
+import { useAuthStore } from "./store/authStore";
 import { Toaster } from "react-hot-toast";
+import { Suspense, useEffect } from "react"; // Add useEffect here
+import Loader from "./components/common/Loader";
 
-import { AuthProvider } from "./context/AuthContext";
-import { CartProvider } from "./context/CartContext";
+// Error Fallback Component
+const ErrorFallback = ({ error, resetErrorBoundary }) => {
+  const { darkMode } = useThemeStore();
 
-import PrivateRoute from "./components/PrivateRoute";
-import AdminRoute from "./components/AdminRoute";
-
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-
-// Public Pages
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Products from "./pages/Products";
-import ProductDetails from "./pages/ProductDetails";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import Orders from "./pages/Orders";
-
-// Admin Pages
-import AdminDashboard from "./admin/AdminDashboard";
-import ManageProducts from "./admin/ManageProducts";
-import ManageOrders from "./admin/ManageOrders";
-import ManageUsers from "./admin/ManageUsers";
-import RevenueDetails from "./admin/RevenueDetails";
-
-import "./App.css";
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-4">
+      <div className="text-center max-w-2xl">
+        <div className="text-6xl mb-6">😵</div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+          Oops! Something went wrong
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          We're sorry for the inconvenience. Our team has been notified.
+        </p>
+        {process.env.NODE_ENV === "development" && (
+          <pre className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 text-left overflow-auto">
+            {error.message}
+          </pre>
+        )}
+        <button onClick={resetErrorBoundary} className="btn-primary px-8 py-3">
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+};
 
 function App() {
+  const { darkMode } = useThemeStore();
+  const { checkAuth } = useAuthStore();
+
+  // Apply dark mode class to html element
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
+
+  // Check if user is already authenticated on app load
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
   return (
-    <AuthProvider>
-      <CartProvider>
-        {/* ✅ Full Layout Wrapper */}
-        <div className="App d-flex flex-column min-vh-100">
-          
-          {/* ✅ Navbar Always Top */}
-          <Navbar />
-
-          {/* ✅ Main Content Expands */}
-          <main className="flex-grow-1">
-            <Routes>
-              {/* ---------------- PUBLIC ROUTES ---------------- */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetails />} />
-              <Route path="/cart" element={<Cart />} />
-
-              {/* ---------------- USER PROTECTED ROUTES ---------------- */}
-              <Route
-                path="/checkout"
-                element={
-                  <PrivateRoute>
-                    <Checkout />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/orders"
-                element={
-                  <PrivateRoute>
-                    <Orders />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* ---------------- ADMIN ROUTES ---------------- */}
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <AdminDashboard />
-                  </AdminRoute>
-                }
-              />
-
-              <Route
-                path="/admin/products"
-                element={
-                  <AdminRoute>
-                    <ManageProducts />
-                  </AdminRoute>
-                }
-              />
-
-              <Route
-                path="/admin/orders"
-                element={
-                  <AdminRoute>
-                    <ManageOrders />
-                  </AdminRoute>
-                }
-              />
-
-              <Route
-                path="/admin/users"
-                element={
-                  <AdminRoute>
-                    <ManageUsers />
-                  </AdminRoute>
-                }
-              />
-
-              <Route
-                path="/admin/revenue"
-                element={
-                  <AdminRoute>
-                    <RevenueDetails />
-                  </AdminRoute>
-                }
-              />
-
-              {/* ---------------- FALLBACK ROUTE ---------------- */}
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </main>
-
-          {/* ✅ Footer Always Bottom */}
-          <Footer />
-
-          {/* ✅ Toast Notifications */}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onReset={() => {
+        // Reset the state of your app here
+        window.location.reload();
+      }}
+    >
+      <Suspense fallback={<Loader />}>
+        <AppRoutes />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: darkMode ? "#1F2937" : "#FFFFFF",
+              color: darkMode ? "#F9FAFB" : "#111827",
+              borderRadius: "1rem",
+              border: `1px solid ${darkMode ? "#374151" : "#E5E7EB"}`,
+            },
+            success: {
+              icon: "🎉",
               style: {
-                background: "#222",
-                color: "#fff",
-                fontSize: "14px",
+                background: "#10B981",
+                color: "#FFFFFF",
               },
-              success: {
-                style: {
-                  background: "#28a745",
-                },
+            },
+            error: {
+              icon: "❌",
+              style: {
+                background: "#EF4444",
+                color: "#FFFFFF",
               },
-              error: {
-                style: {
-                  background: "#dc3545",
-                },
-              },
-              loading: {
-                style: {
-                  background: "#007bff",
-                },
-              },
-            }}
-          />
-        </div>
-      </CartProvider>
-    </AuthProvider>
+            },
+          }}
+        />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
