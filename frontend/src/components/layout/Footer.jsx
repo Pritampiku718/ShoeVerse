@@ -97,16 +97,16 @@ const Footer = () => {
         {/* MAIL US */}
         <div className="lg:border-l border-gray-700/50 lg:pl-6">
           <h4 className="text-gray-400 text-[9px] xs:text-[10px] sm:text-xs uppercase mb-2 xs:mb-3 sm:mb-4 tracking-wider font-semibold">
-            Mail Us:
+            Mail Us:Shoeverse@gmail.com
           </h4>
           <p className="text-gray-400 leading-relaxed text-[8px] xs:text-[9px] sm:text-xs">
             ShoeVerse Internet Private Limited,
             <br />
-            123 Mercer Street,
+            India, West Bengal,
             <br />
-            New York, NY 10012,
+            Kolkata, WB 700016,
             <br />
-            United States
+            India
           </p>
 
           <div className="flex gap-2 xs:gap-3 sm:gap-4 mt-2 xs:mt-3 sm:mt-4">
@@ -125,15 +125,15 @@ const Footer = () => {
           <p className="text-gray-400 leading-relaxed text-[8px] xs:text-[9px] sm:text-xs">
             ShoeVerse Internet Private Limited,
             <br />
-            123 Mercer Street,
+            Kolkata Park Street,
             <br />
-            New York, NY 10012,
+            Kolkata, WB 700016,
             <br />
-            United States
+            India
             <br />
             CIN: U12345NY2026PTC000001
             <br />
-            Telephone: +1 (212) 555-7890
+            Telephone: +91 (33) 12345678
           </p>
         </div>
       </div>
