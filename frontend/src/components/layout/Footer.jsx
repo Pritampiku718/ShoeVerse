@@ -127,7 +127,7 @@ const Footer = () => {
             <br />
             Kolkata Park Street,
             <br />
-            Kolkata, WB 700016,
+            Kolkata, W.B. 700016,
             <br />
             India
             <br />
