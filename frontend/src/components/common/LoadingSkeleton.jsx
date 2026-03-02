@@ -1,97 +1,114 @@
-const LoadingSkeleton = ({ type = "card", count = 1, className = "" }) => {
-  const BaseSkeleton = ({ children }) => (
-    <div className="animate-pulse">{children}</div>
-  );
+import React, { memo } from "react";
 
-  // Card skeleton
-  const CardSkeleton = () => (
-    <BaseSkeleton>
-      <div className="bg-gray-200 dark:bg-gray-700 rounded-xl p-4">
-        <div className="aspect-square bg-gray-300 dark:bg-gray-600 rounded-lg mb-3" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2" />
+//Shared Styles
+const skeletonBase =
+  "animate-pulse bg-gray-200 dark:bg-gray-700 rounded";
+
+//Base Wrapper
+const BaseSkeleton = memo(({ children }) => (
+  <div className="animate-pulse">{children}</div>
+));
+
+//Individual Skeletons
+const Card = memo(() => (
+  <BaseSkeleton>
+    <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800">
+      <div className={`aspect-square mb-3 ${skeletonBase}`} />
+      <div className={`h-4 w-3/4 mb-2 ${skeletonBase}`} />
+      <div className={`h-4 w-1/2 ${skeletonBase}`} />
+    </div>
+  </BaseSkeleton>
+));
+
+const Text = memo(() => (
+  <BaseSkeleton>
+    <div className="space-y-2">
+      <div className={`h-4 w-full ${skeletonBase}`} />
+      <div className={`h-4 w-5/6 ${skeletonBase}`} />
+      <div className={`h-4 w-4/6 ${skeletonBase}`} />
+    </div>
+  </BaseSkeleton>
+));
+
+const Avatar = memo(() => (
+  <BaseSkeleton>
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-full ${skeletonBase}`} />
+      <div className="flex-1">
+        <div className={`h-4 w-1/3 mb-2 ${skeletonBase}`} />
+        <div className={`h-3 w-1/4 ${skeletonBase}`} />
       </div>
-    </BaseSkeleton>
-  );
+    </div>
+  </BaseSkeleton>
+));
 
-  // Text skeleton
-  const TextSkeleton = () => (
-    <BaseSkeleton>
-      <div className="space-y-2">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6" />
-      </div>
-    </BaseSkeleton>
-  );
+const List = memo(() => (
+  <BaseSkeleton>
+    <div className="space-y-2">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className={`h-10 ${skeletonBase}`} />
+      ))}
+    </div>
+  </BaseSkeleton>
+));
 
-  // Avatar skeleton 
-  const AvatarSkeleton = () => (
-    <BaseSkeleton>
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full" />
-        <div className="flex-1">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
-        </div>
-      </div>
-    </BaseSkeleton>
-  );
+const Chart = memo(() => (
+  <BaseSkeleton>
+    <div>
+      <div className={`h-4 w-1/4 mb-4 ${skeletonBase}`} />
+      <div className={`h-32 ${skeletonBase}`} />
+    </div>
+  </BaseSkeleton>
+));
 
-  // List skeleton
-  const ListSkeleton = () => (
-    <BaseSkeleton>
-      <div className="space-y-2">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
-        ))}
-      </div>
-    </BaseSkeleton>
-  );
 
-  // Chart skeleton
-  const ChartSkeleton = () => (
-    <BaseSkeleton>
-      <div className="space-y-2">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4" />
-        <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
-      </div>
-    </BaseSkeleton>
-  );
+//Skeleton Map
+const skeletonMap = {
+  card: Card,
+  text: Text,
+  avatar: Avatar,
+  list: List,
+  chart: Chart,
+};
 
-  const skeletons = {
-    card: CardSkeleton,
-    text: TextSkeleton,
-    avatar: AvatarSkeleton,
-    list: ListSkeleton,
-    chart: ChartSkeleton,
-  };
 
-  const SkeletonComponent = skeletons[type] || skeletons.card;
+//Main Component
+const LoadingSkeleton = ({
+  type = "card",
+  count = 1,
+  className = "",
+}) => {
+  const SkeletonComponent =
+    skeletonMap[type] || skeletonMap.card;
 
   return (
-    <div className={className}>
-      {[...Array(count)].map((_, i) => (
+    <div className={`grid gap-4 ${className}`}>
+      {Array.from({ length: count }).map((_, i) => (
         <SkeletonComponent key={i} />
       ))}
     </div>
   );
 };
 
+//Named Exports
 export const CardSkeleton = (props) => (
   <LoadingSkeleton type="card" {...props} />
 );
+
 export const TextSkeleton = (props) => (
   <LoadingSkeleton type="text" {...props} />
 );
+
 export const AvatarSkeleton = (props) => (
   <LoadingSkeleton type="avatar" {...props} />
 );
+
 export const ListSkeleton = (props) => (
   <LoadingSkeleton type="list" {...props} />
 );
+
 export const ChartSkeleton = (props) => (
   <LoadingSkeleton type="chart" {...props} />
 );
 
-export default LoadingSkeleton;
+export default memo(LoadingSkeleton);
