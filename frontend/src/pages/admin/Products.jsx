@@ -25,7 +25,7 @@ import { toast } from "react-hot-toast";
 import { useProducts } from "../../hooks/useProducts";
 import { useThemeStore } from "../../store/themeStore";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import LoadingSpinner from "../../components/common/Loader";
 import { exportToCSV } from "../../utils/exportUtils";
 
 const Products = () => {
